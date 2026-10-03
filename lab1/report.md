@@ -2,6 +2,10 @@
 
 ## Part 1. Files and directories
 
+# Lab 1: The OS as a Resource Manager
+
+## Part 1. Files and directories
+
 Observe:
 1. The files note.txt and renamed.txt are owned by user ubuntu, group ubuntu.
 2. After chmod 600, ls -l shows -rw-------. The first character - means a regular file. The next three (rw-) are the owner's permissions: read and write. The next three (---) are the group's and the last three (---) are everyone else's: no access. So only the owner can touch the file.
