@@ -1,0 +1,9 @@
+Lab 13 - Observe answers (Serghei Barladean, FAF-241)
+
+1. Without the lock the letters mix because one line costs 31 system calls (30 letters and the new line, one write each). The two processes run at the same time on different processors, and the kernel can switch between any two calls, so nothing keeps the 31 letters of one process together.
+
+2. The two lines are sem_down(3); before the loop that writes the letters and sem_up(3); after it (in lines(), under if (uselock)). Semaphore 3 starts at 1 (sem_init(3, 1)), so it is a lock: one process prints a whole line while the other sleeps in sem_down(3).
+
+3. sem_up calls wakeup(s), which wakes every process that sleeps on s, but it gives only one unit. The first process takes the unit; the next one finds the value 0 again and must sleep again. A process can also wake up for another reason (kill). So the condition must be tested again after waking up: while, not if.
+
+4. If sem_down slept holding the spinlock, sem_up of another process would wait for the same lock forever, and nobody could wake the sleeper: a deadlock. The xv6 kernel also does not allow sleeping with a spinlock held. So sem_down first registers the address (sleep_prepare), then releases the lock, and only then sleeps; if sem_up comes in between, sleep() returns at once and no wake-up is lost.

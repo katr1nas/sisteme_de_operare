@@ -1,0 +1,84 @@
+--- a/kernel/syscall.h
++++ b/kernel/syscall.h
+@@ -21,4 +21,7 @@
+ #define SYS_mkdir  20
+ #define SYS_close  21
+ #define SYS_sync   22
++#define SYS_sem_init 24              // new
++#define SYS_sem_down 25              // new
++#define SYS_sem_up    26             // new
+ #define SYS_trace  23
+--- a/user/user.h
++++ b/user/user.h
+@@ -25,6 +25,9 @@
+ int pause(int);
+ int uptime(void);
+ int sync(void);
++int sem_init(int, int);          // new: id, start value
++int sem_down(int);               // new: take one, or sleep
++int sem_up(int);                 // new: give one back
+ int trace(int);
+ 
+ // ulib.c
+--- a/user/usys.pl
++++ b/user/usys.pl
+@@ -43,4 +43,7 @@
+ entry("pause");
+ entry("uptime");
+ entry("sync");
++entry("sem_init");               # new
++entry("sem_down");               # new
++entry("sem_up");                 # new
+ entry("trace");
+--- a/Makefile
++++ b/Makefile
+@@ -152,6 +152,8 @@
+ 	$U/_grind\
+ 	$U/_wc\
+ 	$U/_zombie\
++	$U/_semtest\
++	$U/_mix\
+ 	$U/_trace\
+ 	$U/_logstress\
+ 	$U/_forphan\
+--- a/kernel/syscall.c
++++ b/kernel/syscall.c
+@@ -103,6 +103,9 @@
+ extern uint64 sys_mkdir(void);
+ extern uint64 sys_close(void);
+ extern uint64 sys_sync(void);
++extern uint64 sys_sem_init(void);           // new
++extern uint64 sys_sem_down(void);           // new
++extern uint64 sys_sem_up(void);             // new
+ extern uint64 sys_trace(void);              // new
+ 
+ // An array mapping syscall numbers from syscall.h
+@@ -131,6 +134,9 @@
+   [SYS_mkdir]   = sys_mkdir,
+   [SYS_close]   = sys_close,
+   [SYS_sync]    = sys_sync,
++  [SYS_sem_init] = sys_sem_init,             // new
++  [SYS_sem_down] = sys_sem_down,             // new
++  [SYS_sem_up]   = sys_sem_up,               // new
+   [SYS_trace]   = sys_trace,                  // new
+   // clang-format on
+ };
+--- a/Makefile
++++ b/Makefile
+@@ -18,6 +18,7 @@
+   $K/trap.o \
+   $K/syscall.o \
+   $K/sysproc.o \
++  $K/sem.o \
+   $K/bio.o \
+   $K/fs.o \
+   $K/log.o \
+@@ -152,6 +153,8 @@
+ 	$U/_grind\
+ 	$U/_wc\
+ 	$U/_zombie\
++	$U/_semtest\
++	$U/_mix\
+ 	$U/_trace\
+ 	$U/_logstress\
+ 	$U/_forphan\
